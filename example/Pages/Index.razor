@@ -1,0 +1,187 @@
+﻿@page "/"
+
+@inject IJSRuntime JSRuntime
+@using System.Text.Json
+@using RazorCameraLibrary
+@using Camera = RazorCameraLibrary.Camera
+@using RazorDocumentLibrary
+
+<PageTitle>Index</PageTitle>
+
+<div id="loading-indicator" class="loading-indicator" style="@(isLoading ? "display: flex;" : "display: none;")">
+    <div class="spinner"></div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <label>
+            Get a License key from <a href="https://www.dynamsoft.com/customer/license/trialLicense?product=ddn"
+                target="_blank">here</a>
+        </label>
+        <div class="filler"></div>
+        <input type="text" placeholder="@licenseKey" @bind="licenseKey">
+        <button @onclick="Activate">Activate SDK</button>
+    </div>
+
+    <div>
+        <button @onclick="GetCameras">Get Cameras</button>
+        <select id="sources" @onchange="e => OnChange(e)">
+            @foreach (var camera in cameras)
+            {
+                <option value="@camera.DeviceId">@camera.Label</option>
+            }
+        </select>
+        <button @onclick="Capture">@buttonText</button>
+        <button @onclick="Rectify">Rectify</button>
+    </div>
+
+    <div id="videoview">
+        <div id="videoContainer"></div>
+    </div>
+    <div id="rectified-document"></div>
+</div>
+
+@code {
+    private string licenseKey =
+    "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==";
+    private bool isLoading = false;
+    private List<Camera> cameras = new List<Camera>();
+    private CameraJsInterop? cameraJsInterop;
+    private CameraEnhancer? cameraEnhancer;
+    private DocumentNormalizer? normalizer;
+    private DocumentJsInterop? documentJsInterop;
+    private string selectedValue = string.Empty;
+    private bool _isCapturing = false;
+    private string buttonText = "Start";
+    private bool _rectificationEnabled = false;
+
+    public async Task Activate()
+    {
+        if (documentJsInterop == null) return;
+        isLoading = true;
+        await documentJsInterop.SetLicense(licenseKey);
+        await documentJsInterop.LoadWasm();
+        normalizer = await documentJsInterop.CreateDocumentNormalizer();
+        isLoading = false;
+    }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        if (cameraEnhancer != null)
+        {
+            await cameraEnhancer.CloseCamera();
+
+            selectedValue = e.Value.ToString();
+
+            await OpenCamera();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        documentJsInterop = new DocumentJsInterop(JSRuntime);
+        await documentJsInterop.LoadJS();
+
+        cameraJsInterop = new CameraJsInterop(JSRuntime);
+        await cameraJsInterop.LoadJS();
+
+        cameraEnhancer = await cameraJsInterop.CreateCameraEnhancer();
+        await cameraEnhancer.SetVideoElement("videoContainer");
+    }
+
+    public async Task GetCameras()
+    {
+        if (cameraEnhancer == null) return;
+        try
+        {
+            cameras = await cameraEnhancer.GetCameras();
+            if (cameras.Count >= 0)
+            {
+                selectedValue = cameras[0].DeviceId;
+                await OpenCamera();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    public async Task OpenCamera()
+    {
+        if (cameraEnhancer == null) return;
+        try
+        {
+            int selectedIndex = cameras.FindIndex(camera => camera.DeviceId == selectedValue);
+            await cameraEnhancer.SetResolution(640, 480);
+            await cameraEnhancer.OpenCamera(cameras[selectedIndex]);
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    public void Capture()
+    {
+        if (cameraEnhancer == null || normalizer == null) return;
+
+        if (!_isCapturing)
+        {
+            buttonText = "Stop";
+            _isCapturing = true;
+            _ = WorkLoop();
+        }
+        else
+        {
+            buttonText = "Start";
+            _isCapturing = false;
+        }
+    }
+
+    private async Task WorkLoop()
+    {
+        List<Quadrilateral> results = new List<Quadrilateral>();
+        if (normalizer == null || cameraEnhancer == null) return;
+
+        while (_isCapturing)
+        {
+            try
+            {
+                IJSObjectReference canvas = await cameraEnhancer.AcquireCameraFrame();
+                results = await normalizer.DetectCanvas(canvas);
+                if (_rectificationEnabled)
+                {
+                    _rectificationEnabled = false;
+                    IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(canvas, results[0].location);
+                    if (rectifiedDocument != null)
+                    {
+                        await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
+                    }
+                    
+                }
+                await cameraEnhancer.ClearOverlay();
+                for (int i = 0; i < results.Count; i++)
+                {
+                    Quadrilateral result = results[i];
+                    await cameraEnhancer.DrawLine(result.Points[0], result.Points[1], result.Points[2], result.Points[3]);
+                    await cameraEnhancer.DrawLine(result.Points[2], result.Points[3], result.Points[4], result.Points[5]);
+                    await cameraEnhancer.DrawLine(result.Points[4], result.Points[5], result.Points[6], result.Points[7]);
+                    await cameraEnhancer.DrawLine(result.Points[6], result.Points[7], result.Points[0], result.Points[1]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        await cameraEnhancer.ClearOverlay();
+    }
+
+    public void Rectify()
+    {
+        _rectificationEnabled = true;
+    }
+}
