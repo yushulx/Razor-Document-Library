@@ -95,3 +95,19 @@ export async function showRectifiedDocument(elementId, canvas)
     return null;
 }
 
+export async function setFilter(normalizer, filter)
+{
+    if (!Dynamsoft) return;
+
+    try {
+        let settings = await normalizer.getRuntimeSettings();
+        settings.ImageParameterArray[0].BinarizationModes[0].ThresholdCompensation = 10;
+        settings.NormalizerParameterArray[0].ColourMode = filter;
+        await normalizer.setRuntimeSettings(settings);
+    }
+    catch (ex) {
+        console.error(ex);
+    }
+    return null;
+}
+

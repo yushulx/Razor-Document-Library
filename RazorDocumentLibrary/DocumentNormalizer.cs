@@ -5,6 +5,12 @@ namespace RazorDocumentLibrary
 {
     public class DocumentNormalizer
     {
+        public class Filter
+        {
+            public static string BlackAndWhite = "ICM_BINARY";
+            public static string Gray = "ICM_GRAYSCALE";
+            public static string Colorful = "ICM_COLOUR";
+        }
         // Fields to hold JavaScript object references.
         private IJSObjectReference _module;
         private IJSObjectReference _jsObjectReference;
@@ -43,9 +49,23 @@ namespace RazorDocumentLibrary
             return rectifiedDocument;
         }
 
+        /// <summary>
+        /// Display the rectified document with an HTML div element.
+        /// </summary>
+        /// <param name="elementId">A div element ID.</param>
+        /// <param name="rectifiedDocument">A reference to the JavaScript canvas object.</param>
         public async Task ShowRectifiedDocument(string elementId, IJSObjectReference rectifiedDocument)
         {
             await _module.InvokeVoidAsync("showRectifiedDocument", elementId, rectifiedDocument);
+        }
+
+        /// <summary>
+        /// Set a filter for the rectified document.
+        /// </summary>
+        /// <param name="filter">The filter name.</param>
+        public async Task SetFilter(string filter)
+        {
+            await _module.InvokeVoidAsync("setFilter", _jsObjectReference, filter);
         }
     }
 }

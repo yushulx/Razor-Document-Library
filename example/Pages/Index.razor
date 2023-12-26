@@ -13,6 +13,11 @@
 </div>
 
 <div class="container">
+    <div>
+        <input type="radio" name="format" value="grayscale" @onchange="HandleInputChange">Grayscale
+        <input type="radio" name="format" value="color" checked @onchange="HandleInputChange">Color
+        <input type="radio" name="format" value="binary" @onchange="HandleInputChange">B&W
+    </div>
     <div class="row">
         <label>
             Get a License key from <a href="https://www.dynamsoft.com/customer/license/trialLicense?product=ddn"
@@ -54,6 +59,7 @@
     private bool _isCapturing = false;
     private string buttonText = "Start";
     private bool _rectificationEnabled = false;
+    private string? inputValue;
 
     public async Task Activate()
     {
@@ -159,7 +165,7 @@
                     {
                         await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
                     }
-                    
+
                 }
                 await cameraEnhancer.ClearOverlay();
                 for (int i = 0; i < results.Count; i++)
@@ -183,5 +189,28 @@
     public void Rectify()
     {
         _rectificationEnabled = true;
+    }
+
+    public async Task HandleInputChange(ChangeEventArgs e)
+    {
+        if (e == null || e.Value == null) return;
+        inputValue = e.Value.ToString();
+
+        if (normalizer == null || cameraEnhancer == null) return;
+
+        string filter = DocumentNormalizer.Filter.Colorful;
+        if (inputValue == "grayscale")
+        {
+            filter = DocumentNormalizer.Filter.Gray;
+        }
+        else if (inputValue == "color")
+        {
+            filter = DocumentNormalizer.Filter.Colorful;
+        }
+        else if (inputValue == "binary")
+        {
+            filter = DocumentNormalizer.Filter.BlackAndWhite;
+        }
+        await normalizer.SetFilter(filter);
     }
 }
