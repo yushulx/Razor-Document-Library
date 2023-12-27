@@ -81,6 +81,6 @@ Represents the coordinates of the four corners of a quadrilateral.
 
 ## Build
 ```bash
-cd RazorMrzLibrary
+cd RazorDocumentLibrary
 dotnet build --configuration Release
 ```
