@@ -7,7 +7,7 @@
   "linkerEnabled": true,
   "resources": {
     "assembly": {
-      "example.dll": "sha256-fFS6IKp6eYE9tc5ypSli+AJR77F0pwGjrCMu9ODmawo=",
+      "example.dll": "sha256-ihC0JCppuQOcRq6MIhHfl4XDA25fovwvKaegmKaSN3s=",
       "Microsoft.AspNetCore.Components.dll": "sha256-+5gMx1NdpxEgHBqFQONGeqidGWK\/q2QtcjyNGdt5fOU=",
       "Microsoft.AspNetCore.Components.Web.dll": "sha256-vFyhxmfvFAitJ4JiLPxjagOq6kefT7EtwXu\/rb60iy8=",
       "Microsoft.AspNetCore.Components.WebAssembly.dll": "sha256-XYM80863rCSqPKTIFsPNKnli9FGEN6ydRhJq9gbYJAE=",
@@ -23,7 +23,7 @@
       "Microsoft.JSInterop.dll": "sha256-HNgWYxTTfU7dGASyHHq\/QmETxRHHFlv3ZsNo+PhNnHU=",
       "Microsoft.JSInterop.WebAssembly.dll": "sha256-bzbqcJ6KmXNtttCdwlY3JqqzIuFo0rRDUc7qjI8CKYM=",
       "RazorCameraLibrary.dll": "sha256-Wn\/wGInVPxqY+irlNbqYFnp1aELIM1Ar6lXvTZd4xgE=",
-      "RazorDocumentLibrary.dll": "sha256-S8kXdT9UqQPpEHuuxIoCrXgTpVh+Xocb+DBQK8ygGSQ=",
+      "RazorDocumentLibrary.dll": "sha256-S1LMOlUGXDAv9COhDSRqPyRre0JGK2UIg5SFy9Mgn+Q=",
       "System.Collections.Concurrent.dll": "sha256-iVVE9O+NcP6iYl4sd\/ZeC3urQoyLH9oTiV2umPpI0Ec=",
       "System.Collections.dll": "sha256-yZGBWIlTeV0gjES9KmgKGZIcNePw9Kq4HT31Rei3KFs=",
       "System.ComponentModel.dll": "sha256-pGP1Cnq1M\/2Hkyb2tJWqyVXzPDBaqoWBi3pBs4L1Cbg=",
