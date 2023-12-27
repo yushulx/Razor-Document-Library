@@ -38,7 +38,7 @@
             }
         </select>
         <button @onclick="Capture">@buttonText</button>
-        <button @onclick="Detect">Detect</button>
+        <button @onclick="Edit">Edit</button>
         <button @onclick="Rectify">Rectify</button>
     </div>
 
@@ -172,7 +172,7 @@
                         savedLocation = result;
                         await normalizer.ShowDocumentEditor("rectified-document", canvas, savedLocation.location);
                     }
-                    
+
                     await cameraEnhancer.DrawLine(result.Points[0], result.Points[1], result.Points[2], result.Points[3]);
                     await cameraEnhancer.DrawLine(result.Points[2], result.Points[3], result.Points[4], result.Points[5]);
                     await cameraEnhancer.DrawLine(result.Points[4], result.Points[5], result.Points[6], result.Points[7]);
@@ -200,10 +200,26 @@
             {
                 await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
             }
+
+            savedCanvas = null;
+            savedLocation = null;
+        }
+        else
+        {
+            IJSObjectReference canvas = await cameraEnhancer.AcquireCameraFrame();
+            Quadrilateral? result = await normalizer.DetectCanvas(canvas);
+            if (result != null)
+            {
+                IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(canvas, result.location);
+                if (rectifiedDocument != null)
+                {
+                    await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
+                }
+            }
         }
     }
 
-    public void Detect()
+    public void Edit()
     {
         _detectEnabled = true;
     }
