@@ -60,6 +60,8 @@
     private string buttonText = "Start";
     private bool _rectificationEnabled = false;
     private string? inputValue;
+    private IJSObjectReference savedCanvas;
+    private string savedLocation;
 
     public async Task Activate()
     {
@@ -163,6 +165,8 @@
                     IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(canvas, results[0].location);
                     if (rectifiedDocument != null)
                     {
+                        savedCanvas = canvas;
+                        savedLocation = results[0].location;
                         await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
                     }
 
@@ -212,5 +216,14 @@
             filter = DocumentNormalizer.Filter.BlackAndWhite;
         }
         await normalizer.SetFilter(filter);
+
+        if (savedCanvas != null)
+        {
+            IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(savedCanvas, savedLocation);
+            if (rectifiedDocument != null)
+            {
+                await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
+            }
+        }
     }
 }
