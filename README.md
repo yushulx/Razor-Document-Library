@@ -5,7 +5,7 @@ A Razor Class Library built using the [Dynamsoft Document Normalizer SDK](https:
 [https://github.com/yushulx/Razor-Document-Library/assets/2202306/b842c8b7-d0b6-47f1-9d04-a96475f8d5c4](https://github.com/yushulx/Razor-Document-Library/assets/2202306/b842c8b7-d0b6-47f1-9d04-a96475f8d5c4)
 
 ## Online Demo
-[https://yushulx.me/Razor-MRZ-Library/](https://yushulx.me/Razor-MRZ-Library/)
+[https://yushulx.me/Razor-Document-Library/](https://yushulx.me/Razor-Document-Library/)
 
 ## Prerequisites
 - [Dynamsoft Document Normalizer License](https://www.dynamsoft.com/customer/license/trialLicense?product=ddn)
