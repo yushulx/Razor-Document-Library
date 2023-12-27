@@ -5,6 +5,7 @@
 @using RazorCameraLibrary
 @using Camera = RazorCameraLibrary.Camera
 @using RazorDocumentLibrary
+@implements DocumentNormalizer.ICallback
 
 <PageTitle>Index</PageTitle>
 
@@ -37,6 +38,7 @@
             }
         </select>
         <button @onclick="Capture">@buttonText</button>
+        <button @onclick="Detect">Detect</button>
         <button @onclick="Rectify">Rectify</button>
     </div>
 
@@ -58,10 +60,10 @@
     private string selectedValue = string.Empty;
     private bool _isCapturing = false;
     private string buttonText = "Start";
-    private bool _rectificationEnabled = false;
+    private bool _detectEnabled = false;
     private string? inputValue;
-    private IJSObjectReference savedCanvas;
-    private string savedLocation;
+    private IJSObjectReference? savedCanvas = null;
+    private Quadrilateral? savedLocation = null;
 
     public async Task Activate()
     {
@@ -70,6 +72,7 @@
         await documentJsInterop.SetLicense(licenseKey);
         await documentJsInterop.LoadWasm();
         normalizer = await documentJsInterop.CreateDocumentNormalizer();
+        normalizer.RegisterCallback(this);
         isLoading = false;
     }
 
@@ -150,36 +153,32 @@
 
     private async Task WorkLoop()
     {
-        List<Quadrilateral> results = new List<Quadrilateral>();
-        if (normalizer == null || cameraEnhancer == null) return;
 
+        if (normalizer == null || cameraEnhancer == null) return;
+        Quadrilateral? result;
         while (_isCapturing)
         {
             try
             {
                 IJSObjectReference canvas = await cameraEnhancer.AcquireCameraFrame();
-                results = await normalizer.DetectCanvas(canvas);
-                if (_rectificationEnabled)
-                {
-                    _rectificationEnabled = false;
-                    IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(canvas, results[0].location);
-                    if (rectifiedDocument != null)
-                    {
-                        savedCanvas = canvas;
-                        savedLocation = results[0].location;
-                        await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
-                    }
-
-                }
+                result = await normalizer.DetectCanvas(canvas);
                 await cameraEnhancer.ClearOverlay();
-                for (int i = 0; i < results.Count; i++)
+                if (result != null)
                 {
-                    Quadrilateral result = results[i];
+                    if (_detectEnabled)
+                    {
+                        _detectEnabled = false;
+                        savedCanvas = canvas;
+                        savedLocation = result;
+                        await normalizer.ShowDocumentEditor("rectified-document", canvas, savedLocation.location);
+                    }
+                    
                     await cameraEnhancer.DrawLine(result.Points[0], result.Points[1], result.Points[2], result.Points[3]);
                     await cameraEnhancer.DrawLine(result.Points[2], result.Points[3], result.Points[4], result.Points[5]);
                     await cameraEnhancer.DrawLine(result.Points[4], result.Points[5], result.Points[6], result.Points[7]);
                     await cameraEnhancer.DrawLine(result.Points[6], result.Points[7], result.Points[0], result.Points[1]);
                 }
+
             }
             catch (Exception ex)
             {
@@ -190,9 +189,23 @@
         await cameraEnhancer.ClearOverlay();
     }
 
-    public void Rectify()
+    public async Task Rectify()
     {
-        _rectificationEnabled = true;
+        if (normalizer == null || cameraEnhancer == null) return;
+
+        if (savedCanvas != null && savedLocation != null)
+        {
+            IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(savedCanvas, savedLocation.location);
+            if (rectifiedDocument != null)
+            {
+                await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
+            }
+        }
+    }
+
+    public void Detect()
+    {
+        _detectEnabled = true;
     }
 
     public async Task HandleInputChange(ChangeEventArgs e)
@@ -217,13 +230,11 @@
         }
         await normalizer.SetFilter(filter);
 
-        if (savedCanvas != null)
-        {
-            IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(savedCanvas, savedLocation);
-            if (rectifiedDocument != null)
-            {
-                await normalizer.ShowRectifiedDocument("rectified-document", rectifiedDocument);
-            }
-        }
+        await Rectify();
+    }
+
+    public async Task OnCallback(Quadrilateral quad)
+    {
+        savedLocation = quad;
     }
 }

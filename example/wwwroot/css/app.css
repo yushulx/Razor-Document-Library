@@ -131,11 +131,11 @@ a, .btn-link {
 }
 
 .container {
-    max-width: 640px;
-    margin: 20px auto;
+    max-width: 680px;
     padding: 20px;
     border: 1px solid #ddd;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 0;
 }
 
 .loading-indicator {

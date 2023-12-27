@@ -15,7 +15,7 @@ namespace RazorDocumentLibrary
             this.location = location;
         }
 
-        public static List<Quadrilateral> WrapResult(JsonElement? result)
+        public static List<Quadrilateral> WrapQuads(JsonElement? result)
         {
             List<Quadrilateral> results = new List<Quadrilateral>();
             if (result != null)
@@ -28,34 +28,48 @@ namespace RazorDocumentLibrary
                     {
                         if (item.TryGetProperty("location", out JsonElement locationValue))
                         {
-                            Quadrilateral quadrilateral = new Quadrilateral(locationValue.ToString());
-                            if (locationValue.TryGetProperty("points", out JsonElement pointsValue))
+                            Quadrilateral? quadrilateral = WrapQuad(item);
+                            if (quadrilateral != null)
                             {
-                                int index = 0;
-                                if (pointsValue.ValueKind == JsonValueKind.Array)
-                                {
-                                    foreach (JsonElement point in pointsValue.EnumerateArray())
-                                    {
-                                        if (point.TryGetProperty("x", out JsonElement xValue))
-                                        {
-                                            int intValue = xValue.GetInt32();
-                                            quadrilateral.Points[index++] = intValue;
-                                        }
-
-                                        if (point.TryGetProperty("y", out JsonElement yValue))
-                                        {
-                                            int intValue = yValue.GetInt32();
-                                            quadrilateral.Points[index++] = intValue;
-                                        }
-                                    }
-                                }
+                                results.Add(quadrilateral);
                             }
-                            results.Add(quadrilateral);
                         }
                     }
                 }
             }
             return results;
+        }
+
+        public static Quadrilateral? WrapQuad(JsonElement result)
+        {
+            Quadrilateral? quadrilateral = null;
+            if (result.TryGetProperty("location", out JsonElement locationValue))
+            {
+                quadrilateral = new Quadrilateral(locationValue.ToString());
+                if (locationValue.TryGetProperty("points", out JsonElement pointsValue))
+                {
+                    int index = 0;
+                    if (pointsValue.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (JsonElement point in pointsValue.EnumerateArray())
+                        {
+                            if (point.TryGetProperty("x", out JsonElement xValue))
+                            {
+                                int intValue = xValue.GetInt32();
+                                quadrilateral.Points[index++] = intValue;
+                            }
+
+                            if (point.TryGetProperty("y", out JsonElement yValue))
+                            {
+                                int intValue = yValue.GetInt32();
+                                quadrilateral.Points[index++] = intValue;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return quadrilateral;
         }
     }
 }

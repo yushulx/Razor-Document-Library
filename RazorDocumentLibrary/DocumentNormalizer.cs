@@ -1,5 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using System.Text.Json;
+using static RazorDocumentLibrary.DocumentNormalizer;
 
 namespace RazorDocumentLibrary
 {
@@ -14,6 +15,9 @@ namespace RazorDocumentLibrary
         // Fields to hold JavaScript object references.
         private IJSObjectReference _module;
         private IJSObjectReference _jsObjectReference;
+        private DotNetObjectReference<DocumentNormalizer> objRef;
+        private bool _disposed = false;
+        private ICallback? _callback;
 
         /// <summary>
         /// Initializes a new instance of the DocumentNormalizer class.
@@ -24,17 +28,19 @@ namespace RazorDocumentLibrary
         {
             _module = module;
             _jsObjectReference = normalizer;
+            objRef = DotNetObjectReference.Create(this);
         }
 
         /// <summary>
         /// Asynchronously detect document edges from a canvas object.
         /// </summary>
         /// <param name="canvas">A reference to the JavaScript object representing the canvas with the document image.</param>
-        /// <returns>A task that represents the asynchronous edge detection. The task result contains the coordinates of the detected edges.</returns>
-        public async Task<List<Quadrilateral>> DetectCanvas(IJSObjectReference canvas)
+        /// <returns>A task that represents a quadrilateral that contains the coordinates of the detected edges.</returns>
+        public async Task<Quadrilateral?> DetectCanvas(IJSObjectReference canvas)
         {
             JsonElement? quads = await _module.InvokeAsync<JsonElement>("detectCanvas", _jsObjectReference, canvas);
-            return Quadrilateral.WrapResult(quads);
+            List<Quadrilateral> all = Quadrilateral.WrapQuads(quads);
+            return all.Count > 0 ? all[0] : null;
         }
 
         /// <summary>
@@ -66,6 +72,56 @@ namespace RazorDocumentLibrary
         public async Task SetFilter(string filter)
         {
             await _module.InvokeVoidAsync("setFilter", _jsObjectReference, filter);
+        }
+
+        [JSInvokable]
+        public Task OnQuadChanged(JsonElement quad)
+        {
+            if (_callback != null)
+            {
+                Quadrilateral? q = Quadrilateral.WrapQuad(quad);
+                if (q != null)
+                {
+                    _callback.OnCallback(q);
+                }
+            }
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Release unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed == false)
+            {
+                objRef.Dispose();
+                _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Destructor for the DocumentNormalizer class.
+        /// </summary>
+        ~DocumentNormalizer()
+        {
+            if (_disposed == false)
+                Dispose();
+        }
+
+        public async Task ShowDocumentEditor(string elementId, IJSObjectReference imageCanvas, string location)
+        {
+            await _module.InvokeVoidAsync("showDocumentEditor", objRef, "OnQuadChanged", elementId, imageCanvas, location);
+        }
+
+        public interface ICallback
+        {
+            Task OnCallback(Quadrilateral quad);
+        }
+
+        public void RegisterCallback(ICallback callback)
+        {
+            _callback = callback;
         }
     }
 }
