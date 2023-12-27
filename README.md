@@ -77,7 +77,7 @@ Represents the coordinates of the four corners of a quadrilateral.
 ## Example
 - [Blazor Document Scanner](https://github.com/yushulx/Razor-Document-Library/tree/main/example)
 
-    ![blazor document rectification](https://www.dynamsoft.com/codepool/img/2023/12/blazor-document-rectification.png)
+    ![blazor document rectification](https://camo.githubusercontent.com/4e15ffb2272f9af603cdc8a5c83ba60ffb0d2f6bf0c5c44d914595ffe37e7628/68747470733a2f2f7777772e64796e616d736f66742e636f6d2f636f6465706f6f6c2f696d672f323032332f31322f626c617a6f722d646f63756d656e742d72656374696669636174696f6e2e706e67)
 
 ## Build
 ```bash

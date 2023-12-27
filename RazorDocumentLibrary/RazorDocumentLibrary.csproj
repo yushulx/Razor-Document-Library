@@ -1,9 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
+    <PackageId>RazorDocumentLibrary</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>yushulx</Authors>
+    <Company>Dynamsoft</Company>
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Description>A Razor Class Library built using the Dynamsoft Document Normalizer SDK, which
+      provides APIs for document edge detection and document rectification.</Description>
+    <PackageProjectUrl>https://github.com/yushulx/Razor-Document-Library</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/yushulx/Razor-Document-Library</RepositoryUrl>
+    <PackageTags>
+      document;rectification;edge;normalization</PackageTags>
+    <PackageReleaseNotes>
+      - Added document detection API.
+    </PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
 
@@ -13,6 +30,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
