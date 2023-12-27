@@ -59,8 +59,6 @@ export async function detectCanvas(normalizer, canvas) {
     return null;
 }
 
-let globalCanvas;
-let globalContext;
 export async function rectifyCanvas(normalizer, canvas, location) {
     if (!Dynamsoft) return;
 
@@ -85,29 +83,22 @@ export async function showDocumentEditor(dotNetHelper, cbName, elementId, canvas
     try {
         let parent = document.getElementById(elementId);
         parent.innerHTML = '';
-
         parent.appendChild(canvas);
 
-        // Create a new canvas element
-        globalCanvas = document.createElement('canvas');
-        globalCanvas.id = 'overlayCanvas';
-        globalCanvas.width = canvas.width; // Match the width of the base canvas
-        globalCanvas.height = canvas.height; // Match the height of the base canvas
+        let overlayCanvas = document.createElement('canvas');
+        overlayCanvas.id = 'overlayCanvas';
+        overlayCanvas.width = canvas.width; 
+        overlayCanvas.height = canvas.height; 
+        overlayCanvas.style.position = 'absolute';
+        overlayCanvas.style.left = canvas.offsetLeft + 'px';
+        overlayCanvas.style.top = canvas.offsetTop + 'px';
+        parent.appendChild(overlayCanvas);
+        let overlayContext = overlayCanvas.getContext("2d");
 
-        // Set positioning to overlay the base canvas
-        globalCanvas.style.position = 'absolute';
-        globalCanvas.style.left = canvas.offsetLeft + 'px';
-        globalCanvas.style.top = canvas.offsetTop + 'px';
-
-        // Add the overlay canvas to the parent of the base canvas
-        parent.appendChild(globalCanvas);
-
-        //globalCanvas = canvas;
-        globalContext = globalCanvas.getContext("2d");
         let data = JSON.parse(location);
-        globalCanvas.addEventListener("mousedown", (event) => updatePoint(event, dotNetHelper, cbName, data.points));
-        globalCanvas.addEventListener("touchstart", (event) => updatePoint(event, dotNetHelper, cbName, data.points));
-        drawQuad(dotNetHelper, cbName, data.points);
+        overlayCanvas.addEventListener("mousedown", (event) => updatePoint(event, dotNetHelper, cbName, data.points, overlayContext, overlayCanvas));
+        overlayCanvas.addEventListener("touchstart", (event) => updatePoint(event, dotNetHelper, cbName, data.points, overlayContext, overlayCanvas));
+        drawQuad(dotNetHelper, cbName, data.points, overlayContext, overlayCanvas);
     }
     catch (ex) {
         console.error(ex);
@@ -143,54 +134,54 @@ export async function setFilter(normalizer, filter) {
     return null;
 }
 
-function updatePoint(e, dotNetHelper, cbName, points) {
-    let rect = globalCanvas.getBoundingClientRect();
+function updatePoint(e, dotNetHelper, cbName, points, overlayContext, overlayCanvas) {
+    let rect = overlayCanvas.getBoundingClientRect();
 
-    let scaleX = globalCanvas.clientWidth / globalCanvas.width;
-    let scaleY = globalCanvas.clientHeight / globalCanvas.height;
+    let scaleX = overlayCanvas.clientWidth / overlayCanvas.width;
+    let scaleY = overlayCanvas.clientHeight / overlayCanvas.height;
     let mouseX = (e.clientX - rect.left) / scaleX;
     let mouseY = (e.clientY - rect.top) / scaleY;
 
     let delta = 10;
     for (let i = 0; i < points.length; i++) {
         if (Math.abs(points[i].x - mouseX) < delta && Math.abs(points[i].y - mouseY) < delta) {
-            globalCanvas.addEventListener("mousemove", dragPoint);
-            globalCanvas.addEventListener("mouseup", releasePoint);
-            globalCanvas.addEventListener("touchmove", dragPoint);
-            globalCanvas.addEventListener("touchend", releasePoint);
+            overlayCanvas.addEventListener("mousemove", dragPoint);
+            overlayCanvas.addEventListener("mouseup", releasePoint);
+            overlayCanvas.addEventListener("touchmove", dragPoint);
+            overlayCanvas.addEventListener("touchend", releasePoint);
             function dragPoint(e) {
-                let rect = globalCanvas.getBoundingClientRect();
+                let rect = overlayCanvas.getBoundingClientRect();
                 let mouseX = e.clientX || e.touches[0].clientX;
                 let mouseY = e.clientY || e.touches[0].clientY;
                 points[i].x = Math.round((mouseX - rect.left) / scaleX);
                 points[i].y = Math.round((mouseY - rect.top) / scaleY);
-                drawQuad(dotNetHelper, cbName, points);
+                drawQuad(dotNetHelper, cbName, points, overlayContext, overlayCanvas);
             }
             function releasePoint() {
-                globalCanvas.removeEventListener("mousemove", dragPoint);
-                globalCanvas.removeEventListener("mouseup", releasePoint);
-                globalCanvas.removeEventListener("touchmove", dragPoint);
-                globalCanvas.removeEventListener("touchend", releasePoint);
+                overlayCanvas.removeEventListener("mousemove", dragPoint);
+                overlayCanvas.removeEventListener("mouseup", releasePoint);
+                overlayCanvas.removeEventListener("touchmove", dragPoint);
+                overlayCanvas.removeEventListener("touchend", releasePoint);
             }
             break;
         }
     }
 }
 
-function drawQuad(dotNetHelper, cbName, points) {
-    globalContext.clearRect(0, 0, globalCanvas.width, globalCanvas.height);
-    globalContext.strokeStyle = "red";
+function drawQuad(dotNetHelper, cbName, points, overlayContext, overlayCanvas) {
+    overlayContext.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    overlayContext.strokeStyle = "red";
     for (let i = 0; i < points.length; i++) {
-        globalContext.beginPath();
-        globalContext.arc(points[i].x, points[i].y, 5, 0, 2 * Math.PI);
-        globalContext.stroke();
+        overlayContext.beginPath();
+        overlayContext.arc(points[i].x, points[i].y, 5, 0, 2 * Math.PI);
+        overlayContext.stroke();
     }
-    globalContext.beginPath();
-    globalContext.moveTo(points[0].x, points[0].y);
-    globalContext.lineTo(points[1].x, points[1].y);
-    globalContext.lineTo(points[2].x, points[2].y);
-    globalContext.lineTo(points[3].x, points[3].y);
-    globalContext.lineTo(points[0].x, points[0].y);
-    globalContext.stroke();
+    overlayContext.beginPath();
+    overlayContext.moveTo(points[0].x, points[0].y);
+    overlayContext.lineTo(points[1].x, points[1].y);
+    overlayContext.lineTo(points[2].x, points[2].y);
+    overlayContext.lineTo(points[3].x, points[3].y);
+    overlayContext.lineTo(points[0].x, points[0].y);
+    overlayContext.stroke();
     dotNetHelper.invokeMethodAsync(cbName, { "location": { "points": points } });
 }
