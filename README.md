@@ -1,4 +1,86 @@
 # Razor Document Library
+A Razor Class Library built using the [Dynamsoft Document Normalizer SDK](https://www.npmjs.com/package/dynamsoft-document-normalizer/), which provides APIs for document edge detection and document rectification.
 
-https://github.com/yushulx/Razor-Document-Library/assets/2202306/b842c8b7-d0b6-47f1-9d04-a96475f8d5c4
+## Demo Video
+[https://github.com/yushulx/Razor-Document-Library/assets/2202306/b842c8b7-d0b6-47f1-9d04-a96475f8d5c4](https://github.com/yushulx/Razor-Document-Library/assets/2202306/b842c8b7-d0b6-47f1-9d04-a96475f8d5c4)
 
+## Online Demo
+[https://yushulx.me/Razor-MRZ-Library/](https://yushulx.me/Razor-MRZ-Library/)
+
+## Prerequisites
+- [Dynamsoft Document Normalizer License](https://www.dynamsoft.com/customer/license/trialLicense?product=ddn)
+
+## Quick Usage
+- Import and initialize the Razor Document Library.
+    
+    ```csharp
+    @using RazorDocumentLibrary
+    
+    @code {
+        private DocumentJsInterop? documentJsInterop;
+        
+        protected override async Task OnInitializedAsync()
+        {
+            documentJsInterop = new DocumentJsInterop(JSRuntime);
+            await documentJsInterop.LoadJS();
+        }
+    }
+    ```
+
+- Set the license key and load the wasm module.
+    
+    ```csharp
+    await documentJsInterop.SetLicense(licenseKey);
+    await documentJsInterop.LoadWasm();
+    ```
+
+- Createa a document normalizer instance.
+    
+    ```csharp
+    DocumentNormalizer normalizer = await documentJsInterop.CreateDocumentNormalizer();
+    ```
+
+- Detect document edges.
+    
+    ```csharp
+    
+    Quadrilateral? result = await normalizer.DetectCanvas(canvas);
+    ```
+
+- Rectify the document based on the detected edges.
+    
+    ```csharp
+    
+    IJSObjectReference rectifiedDocument = await normalizer.RectifyCanvas(canvas, result.location);
+    ```
+
+## API
+
+### Quadrilateral Class
+Represents the coordinates of the four corners of a quadrilateral.
+
+### DocumentNormalizer Class
+
+- `Task<Quadrilateral?> DetectCanvas(IJSObjectReference canvas)`: Detects document edges from a canvas.
+- `Task<IJSObjectReference> RectifyCanvas(IJSObjectReference canvas, string location)`: Rectifies a document based on the detected edges.
+- `Task SetFilter(string filter)`: Sets the filter for document edge detection.
+- `Task ShowDocumentEditor(string elementId, IJSObjectReference imageCanvas, string location)`: Shows the document edge editor.
+- `RegisterCallback(ICallback callback)`: Registers a callback function for receiving the coordinates of the four corners of a document.
+- `Task ShowRectifiedDocument(string elementId, IJSObjectReference rectifiedDocument)`: Displays the rectified document within a specified HTML element.
+
+### DocumentJsInterop Class 
+- `Task LoadJS()`: Loads the Dynamsoft Document Normalizer JavaScript library.
+- `Task SetLicense(string license)`: Sets the license key.
+- `Task LoadWasm()`: Loads the Dynamsoft Document Normalizer WebAssembly module.
+- `Task<MrzRecognizer> CreateDocumentNormalizer()`: Creates a Document Normalizer instance.
+
+## Example
+- [Blazor Document Scanner](https://github.com/yushulx/Razor-Document-Library/tree/main/example)
+
+    ![blazor document rectification](https://www.dynamsoft.com/codepool/img/2023/12/blazor-document-rectification.png)
+
+## Build
+```bash
+cd RazorMrzLibrary
+dotnet build --configuration Release
+```

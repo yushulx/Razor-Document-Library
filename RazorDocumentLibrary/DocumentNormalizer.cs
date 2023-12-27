@@ -1,11 +1,13 @@
 ﻿using Microsoft.JSInterop;
 using System.Text.Json;
-using static RazorDocumentLibrary.DocumentNormalizer;
 
 namespace RazorDocumentLibrary
 {
     public class DocumentNormalizer
     {
+        /// <summary>
+        /// Represents a filter for the rectified document.
+        /// </summary>
         public class Filter
         {
             public static string BlackAndWhite = "ICM_BINARY";
@@ -74,6 +76,11 @@ namespace RazorDocumentLibrary
             await _module.InvokeVoidAsync("setFilter", _jsObjectReference, filter);
         }
 
+        /// <summary>
+        /// The callback function for receiving the detected edges from JavaScript.
+        /// </summary>
+        /// <param name="quad"></param>
+        /// <returns></returns>
         [JSInvokable]
         public Task OnQuadChanged(JsonElement quad)
         {
@@ -109,16 +116,29 @@ namespace RazorDocumentLibrary
                 Dispose();
         }
 
+        /// <summary>
+        /// Show the document editor.
+        /// </summary>
+        /// <param name="elementId">The ID of the HTML div element.</param>
+        /// <param name="imageCanvas">A reference to the JavaScript canvas object.</param>
+        /// <param name="location">The location of the document image.</param>
         public async Task ShowDocumentEditor(string elementId, IJSObjectReference imageCanvas, string location)
         {
             await _module.InvokeVoidAsync("showDocumentEditor", objRef, "OnQuadChanged", elementId, imageCanvas, location);
         }
 
+        /// <summary>
+        /// Defines a callback interface for receiving the detected edges.
+        /// </summary>
         public interface ICallback
         {
             Task OnCallback(Quadrilateral quad);
         }
 
+        /// <summary>
+        /// Registers a callback for receiving the detected edges.
+        /// </summary>
+        /// <param name="callback">A reference to the callback object.</param>
         public void RegisterCallback(ICallback callback)
         {
             _callback = callback;

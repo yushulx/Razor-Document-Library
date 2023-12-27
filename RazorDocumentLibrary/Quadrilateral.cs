@@ -3,7 +3,7 @@
 namespace RazorDocumentLibrary
 {
     /// <summary> 
-    ///  Represents a quadrilateral of a document.
+    /// Represents a quadrilateral of a document.
     /// </summary>
     public class Quadrilateral
     {
